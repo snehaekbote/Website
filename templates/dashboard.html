@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/logout.css') }}">
+</head>
+<body>
+    <h2>Welcome to your Dashboard</h2>
+    <p>You have successfully logged in.</p>
+
+    <!-- Logout button -->
+    <a href="{{ url_for('routes.logout') }}" class="btn btn-logout">Logout</a>
+
+    <!-- Contact Us link -->
+    <a href="{{ url_for('routes.contact') }}" class="btn btn-contact">Contact Us</a>
+
+     <!-- Career Page link -->
+     <a href="{{ url_for('routes.career') }}" class="btn btn-career">Career</a>
+
+    
+</body>
+</html>
