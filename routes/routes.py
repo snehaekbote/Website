@@ -523,14 +523,19 @@ def generate_reset_token(email):
     try:
         # Since you're using PyJWT 2.x.x, no need to decode the token.
         token = jwt.encode({'email': email, 'exp': expiration}, SECRET_KEY, algorithm='HS256')
+        print(f"Generated token: {token}")
         return token
     except Exception as e:
         print(f"Error encoding token: {e}")
         return None
+    
+    # Test the function
+print(generate_reset_token('snehaekbote13@gmail.com'))
 
 def verify_reset_token(token):
     try:
         data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        print(f"Decoded token data: {data}")
         return data['email']
     except jwt.ExpiredSignatureError:
         print("Token has expired.")
@@ -581,10 +586,16 @@ def request_password_reset():
         cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
 
+        print(f"User fetched: {user}")  # Debugging
+
         if user:
             token = generate_reset_token(email)
-            send_password_reset_email(email, token)
-            return jsonify({'status': 'success', 'message': 'A password reset link has been sent to your email.'}), 200
+            print(f"Generated token: {token}")  # Debugging
+            if token:
+                send_password_reset_email(email, token)
+                return jsonify({'status': 'success', 'message': 'A password reset link has been sent to your email.'}), 200
+            else:
+                return jsonify({'status': 'error', 'message': 'Failed to generate reset token.'}), 500
         else:
             return jsonify({'status': 'error', 'message': 'Email not found.'}), 404
 
@@ -599,13 +610,20 @@ def request_password_reset():
 
         
 def send_password_reset_email(to_email, token):
-    reset_link = f"http://127.0.0.1:5000/reset_password/{token}"
-    body = f"""
-    <p>You have requested a password reset. Use the following token to reset your password:</p>
-    <p><strong>Token: {token}</strong></p>
-    <p>Alternatively, you can use the following link:</p>
-    <p><a href="{reset_link}">Reset Password</a></p>
-    """
+    try:
+        print("Entering send_password_reset_email function...")  # Debugging
+        reset_link = f"http://127.0.0.1:5000/reset_password/{token}"
+        print(f"Reset link: {reset_link}")  # Debugging
+
+        body = f"""
+        <p>You have requested a password reset. Use the following token to reset your password:</p>
+        <p><strong>Token: {token}</strong></p>
+        <p>Alternatively, you can use the following link:</p>
+        <p><a href="{reset_link}">Reset Password</a></p>
+        """
+        print(f"Sending token: {token}")
+    except Exception as e:
+        print(f"Error in sending email: {e}")  # Log the exception
     msg = MIMEMultipart()
     msg.attach(MIMEText(body, 'html'))
     msg['Subject'] = 'Password Reset Request'

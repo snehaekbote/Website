@@ -17,8 +17,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)  # Load configuration from Config class
 
-CORS(app)# This will enable CORS for all routes
-CORS(app, origins=["http://13.234.113.49", "http://13.201.168.191"])
+# CORS(app)# This will enable CORS for all routes
+CORS(app, origins=["http://13.234.113.49","http://13.235.115.160", "http://13.201.168.191"])
 
 
 # Initialize SQLAlchemy
