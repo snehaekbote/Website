@@ -9,13 +9,23 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(100), nullable=False, unique=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
+    phone_number = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     # created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # New fields for OTP
+    otp = db.Column(db.String(6), nullable=True)  # Store OTP as a string of 6 characters
+    otp_expiry = db.Column(db.DateTime, nullable=True)  # Time when OTP expires
+    email_verified = db.Column(db.Boolean, default=False)  # Track if email is verified
 
-    def __init__(self, username, email, password):
+    def __init__(self, username, email, phone_number, password, otp=None, otp_expiry=None, email_verified=False):
         self.username = username
         self.email = email
+        self.phone_number = phone_number
         self.password = password
+        self.otp = otp
+        self.otp_expiry = otp_expiry
+        self.email_verified = email_verified
+        
 
     def __repr__(self):
         return f'<User {self.username}>'

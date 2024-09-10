@@ -13,7 +13,10 @@ PyJWT==2.9.0
 python-dotenv==1.0.1
 pytz==2024.1
 Werkzeug==3.0.3
+APScheduler==3.10.4
+pandas==2.2.2
+PyMySQL==1.1.1
+pytest==8.3.2
 
-
-#to run this is the command
-pip install -r requirements.txt
+# #to run this is the command
+# pip install -r requirements.txt
