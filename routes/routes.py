@@ -19,7 +19,7 @@ from werkzeug.security import generate_password_hash
 import logging
 import random
 import jwt
-from models.models import db, User, CareerApplication, Contact
+from models.models import db, User, CareerApplication, Contact, check_email_exists
 from functools import wraps
 from flask_cors import CORS
 import pandas as pd
@@ -252,6 +252,15 @@ def register():
     }), 405
 
 
+@routes_bp.route('/verify_email', methods=['POST'])
+def verify_email():
+    print(f"Request received: {request.json}")
+    email = request.json.get('email')
+    if check_email_exists(email):
+        return jsonify({'exists': True})
+    else:
+        return jsonify({'exists': False}), 404
+
 # OTP Verification route
 # @routes_bp.route('/verify_otp', methods=['POST'])
 # def verify_otp():
@@ -272,10 +281,6 @@ def register():
 #         'message': 'Method not allowed. Please use POST.'
 #     }), 405
 
-
-#new code
-from sqlalchemy import text
-from datetime import datetime
 
 @routes_bp.route('/verify_otp', methods=['POST'])
 def verify_otp():
@@ -481,6 +486,12 @@ def contact():
         phone_number = request.form.get('phone_number')
         queries = request.form.get('queries')
 
+        # Check if the user is registered
+        if not check_email_exists(email):
+            return jsonify({
+                'status': 'error',
+                'message': 'User not registered. Please sign up first.'
+            }), 404
         try:
             contact = Contact(username=username, email=email, phone_number=phone_number, queries=queries)
             db.session.add(contact)
@@ -523,6 +534,7 @@ def generate_reset_token(email):
     try:
         # Since you're using PyJWT 2.x.x, no need to decode the token.
         token = jwt.encode({'email': email, 'exp': expiration}, SECRET_KEY, algorithm='HS256')
+        # If PyJWT returns a byte string, decode it to a string
         print(f"Generated token: {token}")
         return token
     except Exception as e:
@@ -533,6 +545,7 @@ def generate_reset_token(email):
 print(generate_reset_token('snehaekbote13@gmail.com'))
 
 def verify_reset_token(token):
+    print(f"Received token for verification: {token}")
     try:
         data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         print(f"Decoded token data: {data}")
@@ -590,7 +603,7 @@ def request_password_reset():
 
         if user:
             token = generate_reset_token(email)
-            print(f"Generated token: {token}")  # Debugging
+            print(f"request_reset_password token: {token}")  # Debugging
             if token:
                 send_password_reset_email(email, token)
                 return jsonify({'status': 'success', 'message': 'A password reset link has been sent to your email.'}), 200
@@ -612,7 +625,7 @@ def request_password_reset():
 def send_password_reset_email(to_email, token):
     try:
         print("Entering send_password_reset_email function...")  # Debugging
-        reset_link = f"http://127.0.0.1:5000/reset_password/{token}"
+        reset_link = f"http://13.235.115.160:5000/reset_password/{token}"
         print(f"Reset link: {reset_link}")  # Debugging
 
         body = f"""
@@ -690,4 +703,8 @@ def reset_password(token):
 
 @routes_bp.route('/test_post', methods=['POST'])
 def test_post():
+    return "POST request received", 200
+
+@routes_bp.route('/test_pos', methods=['POST'])
+def test_route():
     return "POST request received", 200

@@ -26,10 +26,11 @@ class User(db.Model):
         self.otp_expiry = otp_expiry
         self.email_verified = email_verified
         
-
+    
     def __repr__(self):
         return f'<User {self.username}>'
     
+
 class CareerApplication(db.Model):
     __tablename__ = 'career_applications'
 
@@ -48,6 +49,10 @@ class CareerApplication(db.Model):
     def __repr__(self):
         return f'<CareerApplication {self.email}>'
 
+def check_email_exists(email):
+    # Query the User model to check if an email exists
+    user = User.query.filter_by(email=email).first()
+    return user is not None
 
 class Contact(db.Model):
     __tablename__ = 'contacts'
