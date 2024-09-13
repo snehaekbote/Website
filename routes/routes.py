@@ -369,25 +369,33 @@ def login():
         if user and check_password_hash(user.password, password):
             if not user.email_verified:
                 return jsonify({'status': 'error', 'message': 'Email not verified. Please verify your email.'}), 403
-            
-            session['username'] = user.username
-            session['email'] = email
 
             # Generate JWT token
-            token = jwt.encode({
-                'email': email,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expires in 1 hour
-            }, app.config['SECRET_KEY'], algorithm='HS256')
+            payload = {
+                'email': user.email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiration time
+            }
+            try:
+                token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+                print(f"Generated token: {token}")  # Debug print statement
 
-            return jsonify({
-                'status': 'success',
-                'message': 'Login successful!',
-                'data': {
-                    'username': user.username,
-                    'email': email,
-                    'token': token
-                }
-            }), 200
+                session['username'] = user.username
+                session['email'] = email
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Login successful!',
+                    'data': {
+                        'username': user.username,
+                        'email': email,
+                        'token': token.decode('utf-8')  # Ensure token is a string
+                    }
+                }), 200
+            except Exception as e:
+                print(f"Error generating token: {e}")  # Debug print statement
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Error generating token: {e}'
+                }), 500
         else:
             return jsonify({
                 'status': 'error',

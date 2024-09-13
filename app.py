@@ -34,7 +34,7 @@ migrate = Migrate(app, db)
 app.register_blueprint(routes_bp, url_prefix='/api')
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(test_bp, url_prefix='/api/testcase')
-print(app.url_map)
+# print(app.url_map)
 
 # Function to handle the automated export
 def automated_export():
