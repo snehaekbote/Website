@@ -251,8 +251,7 @@ def register():
         'message': 'Method not allowed. Please use POST.'
     }), 405
 
-
-@routes_bp.route('/verify_email', methods=['POST'])
+@routes_bp.route('/verify', methods=['POST'])
 def verify_email():
     print(f"Request received: {request.json}")
     email = request.json.get('email')
@@ -260,28 +259,7 @@ def verify_email():
         return jsonify({'exists': True})
     else:
         return jsonify({'exists': False}), 404
-
-# OTP Verification route
-# @routes_bp.route('/verify_otp', methods=['POST'])
-# def verify_otp():
-#     if request.method == 'POST':
-#         email = request.json.get('email')
-#         otp = request.json.get('otp')
-
-#         user = User.query.filter_by(email=email).first()
-#         if user and user.otp == otp and user.otp_expiry > datetime.now():
-#             user.email_verified = True
-#             db.session.commit()
-#             return jsonify({'status': 'success', 'message': 'Email verified successfully! You can now log in.'}), 200
-#         else:
-#             return jsonify({'status': 'error', 'message': 'Invalid or expired OTP.'}), 400
-
-#     return jsonify({
-#         'status': 'error',
-#         'message': 'Method not allowed. Please use POST.'
-#     }), 405
-
-
+    
 @routes_bp.route('/verify_otp', methods=['POST'])
 def verify_otp():
     if request.method == 'POST':
@@ -346,6 +324,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Login route
 # @routes_bp.route('/login', methods=['POST'])
 # def login():
 #     if request.method == 'POST':
@@ -355,6 +334,9 @@ def login_required(f):
 #         user = User.query.filter_by(email=email).first()
 
 #         if user and check_password_hash(user.password, password):
+#             if not user.email_verified:
+#                 return jsonify({'status': 'error', 'message': 'Email not verified. Please verify your email.'}), 403
+            
 #             session['username'] = user.username
 #             session['email'] = email
 #             return jsonify({
@@ -376,7 +358,6 @@ def login_required(f):
 #         'message': 'GET method not supported. Please send a POST request.'
 #     }), 405
 
-# Login route
 @routes_bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
@@ -391,12 +372,20 @@ def login():
             
             session['username'] = user.username
             session['email'] = email
+
+            # Generate JWT token
+            token = jwt.encode({
+                'email': email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expires in 1 hour
+            }, app.config['SECRET_KEY'], algorithm='HS256')
+
             return jsonify({
                 'status': 'success',
                 'message': 'Login successful!',
                 'data': {
                     'username': user.username,
-                    'email': email
+                    'email': email,
+                    'token': token
                 }
             }), 200
         else:
@@ -475,49 +464,6 @@ def career():
                 'message': f'An error occurred: {e}'
             }), 500
 
-
-
-@routes_bp.route('/contact', methods=['POST'])
-@login_required
-def contact():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        phone_number = request.form.get('phone_number')
-        queries = request.form.get('queries')
-
-        # Check if the user is registered
-        if not check_email_exists(email):
-            return jsonify({
-                'status': 'error',
-                'message': 'User not registered. Please sign up first.'
-            }), 404
-        try:
-            contact = Contact(username=username, email=email, phone_number=phone_number, queries=queries)
-            db.session.add(contact)
-            db.session.commit()
-            return jsonify({
-                'status': 'success',
-                'message': 'Your message has been sent!',
-                'data': {
-                    'username': username,
-                    'email': email,
-                    'phone_number': phone_number,
-                    'queries': queries
-                }
-            }), 201
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': f'An error occurred: {e}'
-            }), 500
-        finally:
-            db.session.rollback()
-
-    return jsonify({
-        'status': 'error',
-        'message': 'GET method not supported. Please send a POST request.'
-    }), 405
 
 
 
@@ -701,10 +647,27 @@ def reset_password(token):
         return {"token": token}, 200
 
 
-@routes_bp.route('/test_post', methods=['POST'])
-def test_post():
-    return "POST request received", 200
+# @routes_bp.route('/test_post', methods=['GET', 'POST'])
+# def test_post():
+#     return "POST request received", 200
 
-@routes_bp.route('/test_pos', methods=['POST'])
-def test_route():
-    return "POST request received", 200
+# @routes_bp.route('/test_post', methods=['GET', 'POST'])
+# def test_post():
+#     if request.method == 'POST':
+#         return "POST request received", 200
+#     elif request.method == 'GET':
+#         return "GET request received", 200
+
+# @routes_bp.route('/test_app', methods=['GET'])
+# def test_route():
+#     return "Test route works!"
+
+
+# @routes_bp.route('/test')
+# def test():
+#     print("Test route reached.")
+#     return "Test route"
+
+# @routes_bp.route('/test_get', methods=['GET'])
+# def test_get():
+#     return "GET request received", 200
