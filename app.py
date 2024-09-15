@@ -1,12 +1,12 @@
-from flask import Flask
+from flask import Flask, g, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_migrate import Migrate
 from config.config import Config
-from models.models import db
-from routes.routes import routes_bp, create_engine_from_config, export_multiple_tables_to_excel
+from models.models import db, User
 from routes.auth_routes import auth_bp
-from routes.test_routes import test_bp
+from routes.user_routes import user_bp
+from routes.data_routes import data_bp, create_engine_from_config, export_multiple_tables_to_excel
 from dotenv import load_dotenv
 from flask_cors import CORS
 import pandas as pd
@@ -20,8 +20,8 @@ app = Flask(__name__)
 app.config.from_object(Config)  # Load configuration from Config class
 
 # CORS(app)# This will enable CORS for all routes
-CORS(app, origins=["http://13.234.113.49","http://13.235.115.160"])
-# CORS(app, origins=["http://13.235.115.160"])
+CORS(app, origins=["http://13.234.113.49","http://13.235.115.160","http://13.201.168.191"])
+
 
 
 # Initialize SQLAlchemy
@@ -31,10 +31,18 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Register the blueprint
-app.register_blueprint(routes_bp, url_prefix='/api')
-app.register_blueprint(auth_bp, url_prefix='/api/auth')
-app.register_blueprint(test_bp, url_prefix='/api/testcase')
+app.register_blueprint(auth_bp, url_prefix='/api')
+app.register_blueprint(user_bp, url_prefix='/api')
+app.register_blueprint(data_bp, url_prefix='/api')
 # print(app.url_map)
+
+@app.before_request
+def load_logged_in_user():
+    email = session.get('email')  # Get the email from session
+    if email:
+        g.user = User.query.filter_by(email=email).first()  # Load user from DB
+    else:
+        g.user = None
 
 # Function to handle the automated export
 def automated_export():

@@ -39,12 +39,16 @@ class CareerApplication(db.Model):
     phone_number = db.Column(db.String(20), nullable=False)
     profile = db.Column(db.String(255), nullable=False)
     resume_filename = db.Column(db.String(255), nullable=False)  # Update column name to match DB
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    def __init__(self, email, phone_number, profile, resume_filename):
+    user = db.relationship('User', backref=db.backref('career_applications', lazy=True))
+
+    def __init__(self, email, phone_number, profile, resume_filename, user_id):
         self.email = email
         self.phone_number = phone_number
         self.profile = profile
         self.resume_filename = resume_filename
+        self.user_id = user_id
 
     def __repr__(self):
         return f'<CareerApplication {self.email}>'
@@ -62,13 +66,17 @@ class Contact(db.Model):
     email = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     queries = db.Column(db.String(500), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key to User
+
+    user = db.relationship('User', backref=db.backref('contacts', lazy=True))
     # created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, username, email, phone_number, queries):
+    def __init__(self, username, email, phone_number, queries, user_id):
         self.username = username
         self.email = email
         self.phone_number = phone_number
         self.queries = queries
+        self.user_id = user_id
 
     def __repr__(self):
         return f'<Contact {self.username}>'

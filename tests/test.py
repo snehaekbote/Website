@@ -1,8 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
+from config.config import Config
 
-DATABASE_URL = "mysql+pymysql://admin:Admin#235@13.234.113.49/turtu_website"
+DATABASE_URL = f"mysql+pymysql://admin:{Config.DB_PASSWORD}@{Config.DB_HOST}/{Config.DB_NAME}"
 
 def test_database_connection():
     try:
