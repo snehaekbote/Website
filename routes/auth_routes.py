@@ -463,4 +463,3 @@ def reset_password(token):
 def test_post():
     return "POST request received", 200
 
-verify_reset_token
