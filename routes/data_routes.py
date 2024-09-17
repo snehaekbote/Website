@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, send_file
 from config.config import Config
 from sqlalchemy import create_engine
 import pandas as pd
+import openpyxl
 
 data_bp = Blueprint('data', __name__)
 
@@ -38,7 +39,7 @@ def export_data_route():
 
         # Define tables to export
         tables = ["career_applications", "contacts", "users"]  # Replace with actual table names
-        excel_file = "api_export3.xlsx"
+        excel_file = "api_export_automated.xlsx"
 
         # Export the data
         file_path = export_multiple_tables_to_excel(engine, tables, excel_file)

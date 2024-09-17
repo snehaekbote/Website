@@ -1,4 +1,4 @@
-from flask import Flask, g, session
+from flask import Flask, g, session, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_migrate import Migrate
@@ -12,6 +12,9 @@ from flask_cors import CORS
 import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 import signal
+import os
+import atexit
+import threading
 
 # Load environment variables from .env file
 load_dotenv()
@@ -54,7 +57,7 @@ def automated_export():
 
 # Set up APScheduler for automated tasks
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=automated_export, trigger="interval", minutes=20)  # Runs every 1 minute
+scheduler.add_job(func=automated_export, trigger="interval", minutes=1)  # Runs every 1 minute
 scheduler.start()
 
 # Handle shutdown signals (like Ctrl+C) gracefully
@@ -87,4 +90,4 @@ if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=5000, debug=True)
     except (KeyboardInterrupt, SystemExit):
-        shutdown_scheduler(None, None)  # Ensures scheduler stops
+        shutdown_scheduler(None, None) 

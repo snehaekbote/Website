@@ -44,7 +44,7 @@ SECRET_KEY = 'SECRET_KEY'
 def home():
     return render_template('home.html')
 
-@auth_bp.rou('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
         username = request.json.get('username')
