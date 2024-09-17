@@ -1,6 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.config import Config
 
 DATABASE_URL = f"mysql+pymysql://admin:{Config.DB_PASSWORD}@{Config.DB_HOST}/{Config.DB_NAME}"
