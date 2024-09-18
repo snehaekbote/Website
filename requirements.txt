@@ -17,6 +17,7 @@ APScheduler
 pandas
 PyMySQL
 pytest
+openpyxl
 
 # #to run this is the command
 # pip install -r requirements.txt
