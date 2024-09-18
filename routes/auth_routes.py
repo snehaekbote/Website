@@ -11,7 +11,6 @@ import pymysql
 from datetime import datetime, timedelta
 from datetime import datetime
 import pytz
-from config.config import Config
 from mysql.connector import Error
 import os
 from werkzeug.utils import secure_filename
