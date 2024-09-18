@@ -12,8 +12,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      BB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
-
+     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -33,4 +37,4 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest -s tests/test_database.py

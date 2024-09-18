@@ -6,10 +6,17 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.config import Config
 
+# Fetch environment variables
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
+
 DATABASE_URL = f"mysql+pymysql://admin:{Config.DB_PASSWORD}@{Config.DB_HOST}/{Config.DB_NAME}"
 
 def test_database_connection():
     try:
+        print(f"DATABASE_URL: {DATABASE_URL}")  # Debugging line
         engine = create_engine(DATABASE_URL)
         with engine.connect() as connection:
             assert connection is not None
