@@ -61,4 +61,4 @@ jobs:
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} 'cd /home/ubuntu/Test_API && git pull origin main && ./deploy-script.sh'
 
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TOKEN: ${{ secrets.TOKEN }}
