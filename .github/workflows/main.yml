@@ -56,13 +56,13 @@ jobs:
         run: |
           ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-          - name: Check Known Hosts
-          run: |
-            cat ~/.ssh/known_hosts
+      - name: Check Known Hosts
+        run: |
+          cat ~/.ssh/known_hosts
   
       - name: Test SSH Connection
         run: |
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no user@${{ secrets.SSH_HOST }} 'echo "SSH connection successful"'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no user@${{ secrets.SSH_HOST }} 'echo "SSH connection successful"'
 
       - name: Deploy application via SSH
         run: |
