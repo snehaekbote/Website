@@ -52,12 +52,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Add SSH Key to SSH Agent
-        run: |
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-        
-
       - name: Add Known Hosts
         run: |
           ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
