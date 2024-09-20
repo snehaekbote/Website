@@ -17,6 +17,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
      
     steps:
       - name: Checkout code
@@ -62,7 +63,7 @@ jobs:
   
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no user@${{ secrets.SSH_HOST }} 'echo "SSH connection successful"'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} 'echo "SSH connection successful"'
 
       - name: Deploy application via SSH
         run: |
