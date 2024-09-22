@@ -22,6 +22,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)  # Load configuration from Config class
 
+
 # CORS(app)# This will enable CORS for all routes
 CORS(app, origins=["http://13.234.113.49","http://13.235.115.160","http://13.201.168.191"])
 
@@ -57,7 +58,7 @@ def automated_export():
 
 # Set up APScheduler for automated tasks
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=automated_export, trigger="interval", minutes=1)  # Runs every 1 minute
+scheduler.add_job(func=automated_export, trigger="interval", minutes=30)  # Runs every 1 minute
 scheduler.start()
 
 # Handle shutdown signals (like Ctrl+C) gracefully
@@ -80,10 +81,6 @@ def test_db_connection():
     except Exception as e:
         return f"Failed to connect to the database. Error: {e}"
     
-# @app.route('/test')
-# def test_route():
-#     return "Test route works!"
-
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-from flask import Blueprint, g, render_template, request, session,current_app as app, jsonify, send_file
+from flask import current_app , Blueprint, render_template, request, session, jsonify
 import mysql.connector
 from mysql.connector import IntegrityError
 from db.db import get_db_connection
@@ -9,7 +9,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import re
 import pymysql
 from datetime import datetime, timedelta
-from datetime import datetime
 import pytz
 from mysql.connector import Error
 import os
@@ -26,6 +25,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 from apscheduler.schedulers.background import BackgroundScheduler
+from config.config import Config
+
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -226,14 +227,22 @@ def login():
             if not user.email_verified:
                 return jsonify({'status': 'error', 'message': 'Email not verified. Please verify your email.'}), 403
             
-            session['username'] = user.username
-            session['email'] = email
+            # Generate JWT token
+            token = jwt.encode({
+                'user_id': user.id,
+                'username': user.username,
+                'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+            }, current_app.config['SECRET_KEY'], algorithm='HS256')
+            
+            # session['username'] = user.username
+            # session['email'] = email
             return jsonify({
                 'status': 'success',
                 'message': 'Login successful!',
                 'data': {
                     'username': user.username,
-                    'email': email
+                    'email': email,
+                    'token': token  # Return the JWT token
                 }
             }), 200
         else:
@@ -247,10 +256,13 @@ def login():
         'message': 'GET method not supported. Please send a POST request.'
     }), 405
 
+
+
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     email = session.get('email')
     username = session.get('username')
+    
      
     # Check if user is logged in
     if not email:
@@ -287,7 +299,7 @@ def generate_reset_token(email):
     expiration = datetime.utcnow() + timedelta(minutes=30)
     try:
         # Since you're using PyJWT 2.x.x, no need to decode the token.
-        token = jwt.encode({'email': email, 'exp': expiration}, app.config[SECRET_KEY], algorithm='HS256')
+        token = jwt.encode({'email': email, 'exp': expiration}, current_app.config[SECRET_KEY], algorithm='HS256')
         # If PyJWT returns a byte string, decode it to a string
         print(f"Generated token: {token}")
         return token
@@ -300,7 +312,7 @@ def verify_reset_token(token):
     print(f"Received token for verification: {token}")
     try:
         # Decode the token using the secret key and HS256 algorithm
-        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
         print(f"Decoded token data: {data}")
         return data['email']
     except jwt.ExpiredSignatureError:
@@ -362,48 +374,6 @@ def request_password_reset():
     finally:
         if conn:
             conn.close()
-
-
-        
-# def send_password_reset_email(to_email, token):
-#     try:
-#         print("Entering send_password_reset_email function...")  # Debugging
-#         reset_link = f"http://13.235.115.160:5000/reset_password/{token}"
-#         print(f"Reset link: {reset_link}")  # Debugging
-
-#         body = f"""
-#         <p>You have requested a password reset. Use the following token to reset your password:</p>
-#         <p><strong>Token: {token}</strong></p>
-#         <p>Alternatively, you can use the following link:</p>
-#         <p><a href="{reset_link}">Reset Password</a></p>
-#         """
-#         print(f"Sending token: {token}")
-#     except Exception as e:
-#         print(f"Error in sending email: {e}")  # Log the exception
-#     msg = MIMEMultipart()
-#     msg.attach(MIMEText(body, 'html'))
-#     msg['Subject'] = 'Password Reset Request'
-#     msg['From'] = Config.SMTP_USERNAME
-#     msg['To'] = to_email
-
-#     # Print email details for debugging
-#     print("Sending email...")
-#     print(f"Subject: {msg['Subject']}")
-#     print(f"From: {msg['From']}")
-#     print(f"To: {msg['To']}")
-#     print(f"Body: {body}")
-
-#     try:
-#         server = smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT)
-#         server.starttls()
-#         server.login(Config.SMTP_USERNAME, Config.SMTP_PASSWORD)
-#         server.send_message(msg)
-#         print("Password reset email sent successfully!")
-#     except Exception as e:
-#         print(f"Failed to send password reset email: {e}")
-#     finally:
-#         server.quit()
-
 
 
 @auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
