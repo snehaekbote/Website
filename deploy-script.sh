@@ -3,11 +3,12 @@
 # Pull the latest code
 git pull origin main
 
-# Activate your virtual environment (if applicable)
+# Activate your virtual environment
 source venv/bin/activate
 
 # Install any new dependencies
 pip install -r requirements.txt
 
-# Restart your server (e.g., Flask or any service)
-systemctl restart your-app.service
+# Restart your application service
+echo "Restarting my_flask_app.service..."
+sudo systemctl restart my_flask_app.service
