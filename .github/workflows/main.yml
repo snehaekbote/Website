@@ -12,8 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       DB_HOST: ${{ secrets.DB_HOST }}
-      BB_USER: ${{ secrets.DB_USER }}
+      DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}

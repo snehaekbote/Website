@@ -9,37 +9,36 @@ from functools import wraps
 
 user_bp = Blueprint('user', __name__)
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        print("Authorization header:", token)  # Debugging statement
+# def token_required(f):
+#     @wraps(f)
+#     def decorated(*args, **kwargs):
+#         token = request.headers.get('Authorization')
+#         print("Authorization header:", token)  # Debugging statement
 
-        if not token or not token.startswith('Bearer '):
-            print("Token is missing or invalid.")  # Debugging statement
-            return jsonify({'status': 'error', 'message': 'Token is missing or invalid.'}), 401
+#         if not token or not token.startswith('Bearer '):
+#             print("Token is missing or invalid.")  # Debugging statement
+#             return jsonify({'status': 'error', 'message': 'Token is missing or invalid.'}), 401
 
-        try:
-            token = token.split(' ')[1]  # Extract the actual token part
-            # Decode the token using your secret key
-            decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-            user_id = decoded_token['user_id']
-            username = decoded_token['username']
-            print("Decoded token:", decoded_token)  # Debugging statement
-        except jwt.ExpiredSignatureError:
-            print("Token has expired.")  # Debugging statement
-            return jsonify({'status': 'error', 'message': 'Token has expired.'}), 401
-        except jwt.InvalidTokenError:
-            print("Invalid token.")  # Debugging statement
-            return jsonify({'status': 'error', 'message': 'Invalid token.'}), 401
+#         try:
+#             token = token.split(' ')[1]  # Extract the actual token part
+#             # Decode the token using your secret key
+#             decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+#             user_id = decoded_token['user_id']
+#             username = decoded_token['username']
+#             print("Decoded token:", decoded_token)  # Debugging statement
+#         except jwt.ExpiredSignatureError:
+#             print("Token has expired.")  # Debugging statement
+#             return jsonify({'status': 'error', 'message': 'Token has expired.'}), 401
+#         except jwt.InvalidTokenError:
+#             print("Invalid token.")  # Debugging statement
+#             return jsonify({'status': 'error', 'message': 'Invalid token.'}), 401
 
-        return f(user_id=user_id, username=username, *args, **kwargs)
+#         return f(user_id=user_id, username=username, *args, **kwargs)
 
-    return decorated
+#     return decorated
 
 
 @user_bp.route('/career', methods=['POST'])
-# @login_required  # Ensure only logged-in users can access
 def career():
     if request.method == 'POST':
         # Retrieve form data
@@ -126,7 +125,6 @@ def career():
 
 
 @user_bp.route('/contact', methods=['POST'])
-@token_required
 def contact(user_id, username):
     print("User ID from token:", user_id)  # Debugging statement
     print("Username from token:", username)  # Debugging statement
