@@ -1,13 +1,16 @@
 #/bin/bash
+# Log current git status
+echo "Git status before reset:"
+git status
 
-# Stash any local changes
-git stash --include-untracked
+# Reset any local changes (including uncommitted ones)
+git reset --hard
+
+# Remove any untracked files and directories
+git clean -fd
 
 # Pull the latest code with rebase
 git pull --rebase origin main
-
-# Apply stashed changes, if any
-git stash pop || true
 
 # Activate your virtual environment
 source venv/bin/activate
