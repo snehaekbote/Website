@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from flask import current_app, Blueprint, g, request, jsonify
 import os
 from werkzeug.utils import secure_filename
@@ -277,7 +276,6 @@ def contact(user_id, username):
 
 
 def allowed_file(filename):
-=======
 from flask import current_app, Blueprint, g, request, jsonify
 import os
 from werkzeug.utils import secure_filename
@@ -555,5 +553,4 @@ def contact(user_id, username):
 
 
 def allowed_file(filename):
->>>>>>> aa0f21be0daaa2492d843f827a1a77c3e4922e31
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'pdf', 'doc', 'docx'}
