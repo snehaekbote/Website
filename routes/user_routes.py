@@ -272,7 +272,5 @@ def contact(user_id, username):
     }), 405
 
 
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'pdf', 'doc', 'docx'}
