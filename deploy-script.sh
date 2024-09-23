@@ -1,6 +1,9 @@
 #/bin/bash
 
-# Pull the latest code
+# Reset any local changes
+git reset --hard origin/main
+
+# Pull the latest code (this won't fail since there are no local changes)
 git pull origin main
 
 # Activate your virtual environment
