@@ -1,7 +1,6 @@
 from flask import current_app, Blueprint, g, request, jsonify
 import os
 from werkzeug.utils import secure_filename
-from routes.auth_routes import login_required
 from utils.email_utils import send_career_email, send_query_contact_email
 from models.models import db, CareerApplication, Contact
 import jwt
