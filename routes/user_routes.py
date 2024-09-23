@@ -9,36 +9,39 @@ from functools import wraps
 
 user_bp = Blueprint('user', __name__)
 
-# def token_required(f):
-#     @wraps(f)
-#     def decorated(*args, **kwargs):
-#         token = request.headers.get('Authorization')
-#         print("Authorization header:", token)  # Debugging statement
+# Utility function to extract and decode JWT
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(" ")[1]  # Bearer <token>
 
-#         if not token or not token.startswith('Bearer '):
-#             print("Token is missing or invalid.")  # Debugging statement
-#             return jsonify({'status': 'error', 'message': 'Token is missing or invalid.'}), 401
+        if not token:
+            return jsonify({
+                'status': 'error',
+                'message': 'Token is missing!'
+            }), 401
 
-#         try:
-#             token = token.split(' ')[1]  # Extract the actual token part
-#             # Decode the token using your secret key
-#             decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-#             user_id = decoded_token['user_id']
-#             username = decoded_token['username']
-#             print("Decoded token:", decoded_token)  # Debugging statement
-#         except jwt.ExpiredSignatureError:
-#             print("Token has expired.")  # Debugging statement
-#             return jsonify({'status': 'error', 'message': 'Token has expired.'}), 401
-#         except jwt.InvalidTokenError:
-#             print("Invalid token.")  # Debugging statement
-#             return jsonify({'status': 'error', 'message': 'Invalid token.'}), 401
+        try:
+            # Decode the token to get user info
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            g.user = data  # Store user data in g for access in the route
+        except jwt.ExpiredSignatureError:
+            return jsonify({
+                'status': 'error',
+                'message': 'Token has expired. Please log in again.'
+            }), 401
+        except jwt.InvalidTokenError:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid token. Please log in again.'
+            }), 401
 
-#         return f(user_id=user_id, username=username, *args, **kwargs)
-
-#     return decorated
-
-
+        return f(*args, **kwargs)
+    return decorated
 @user_bp.route('/career', methods=['POST'])
+@token_required  # Apply the token_required decorator to require JWT
 def career():
     if request.method == 'POST':
         # Retrieve form data
@@ -66,8 +69,8 @@ def career():
             }), 400
 
         try:
-            # Fetch the current user's ID from session or g.user (assuming user is logged in)
-            user_id = g.user.id if g.user else None  # Adjust based on your session management
+            # Fetch the current user's ID from the decoded JWT token
+            user_id = g.user['user_id']
 
             if not user_id:
                 return jsonify({
@@ -89,12 +92,11 @@ def career():
             # Fetch the application_id after commit
             application_id = application.id
 
-
             # Optional: Send a confirmation email after saving the application
             send_career_email(
-                to_email=email, 
-                username=g.user.username,  # Assuming username is stored in g.user
-                profile=profile, 
+                to_email=email,
+                username=g.user['username'],  # Extract username from the JWT
+                profile=profile,
                 resume_filename=resume_filename,
                 application_id=application_id
             )
@@ -122,6 +124,91 @@ def career():
         'status': 'error',
         'message': 'GET method not supported. Please send a POST request.'
     }), 405
+
+# @user_bp.route('/career', methods=['POST'])
+# def career():
+#     if request.method == 'POST':
+#         # Retrieve form data
+#         email = request.form.get('email')
+#         phone_number = request.form.get('phone_number')
+#         profile = request.form.get('profile')
+#         resume = request.files.get('resume')
+
+#         # Check if all required fields are provided
+#         if not email or not phone_number or not profile or not resume:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'All fields are required.'
+#             }), 400
+
+#         # Validate and save the resume file
+#         if resume and allowed_file(resume.filename):
+#             filename = secure_filename(resume.filename)
+#             resume_filename = os.path.join('uploads', filename)
+#             resume.save(resume_filename)
+#         else:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Invalid file format for resume.'
+#             }), 400
+
+#         try:
+#             # Fetch the current user's ID from session or g.user (assuming user is logged in)
+#             user_id = g.user.id if g.user else None  # Adjust based on your session management
+
+#             if not user_id:
+#                 return jsonify({
+#                     'status': 'error',
+#                     'message': 'User is not logged in.'
+#                 }), 403
+
+#             # Create a new career application entry with the user_id
+#             application = CareerApplication(
+#                 user_id=user_id,
+#                 email=email,
+#                 phone_number=phone_number,
+#                 profile=profile,
+#                 resume_filename=resume_filename
+#             )
+#             db.session.add(application)
+#             db.session.commit()
+
+#             # Fetch the application_id after commit
+#             application_id = application.id
+
+
+#             # Optional: Send a confirmation email after saving the application
+#             send_career_email(
+#                 to_email=email, 
+#                 username=g.user.username,  # Assuming username is stored in g.user
+#                 profile=profile, 
+#                 resume_filename=resume_filename,
+#                 application_id=application_id
+#             )
+
+#             return jsonify({
+#                 'status': 'success',
+#                 'message': 'Application submitted successfully!',
+#                 'data': {
+#                     'user_id': user_id,
+#                     'email': email,
+#                     'phone_number': phone_number,
+#                     'profile': profile,
+#                     'resume_filename': resume_filename,
+#                     'application_id': application_id
+#                 }
+#             }), 201
+#         except Exception as e:
+#             db.session.rollback()
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': f'An error occurred: {e}'
+#             }), 500
+
+#     return jsonify({
+#         'status': 'error',
+#         'message': 'GET method not supported. Please send a POST request.'
+#     }), 405
 
 
 @user_bp.route('/contact', methods=['POST'])

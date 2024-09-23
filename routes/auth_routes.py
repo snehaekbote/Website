@@ -256,35 +256,44 @@ def login():
         'message': 'GET method not supported. Please send a POST request.'
     }), 405
 
-
-
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
-    email = session.get('email')
-    username = session.get('username')
+    # No session management is needed since we are using JWT tokens
+    # The client can simply discard the token to "log out"
+
+    return jsonify({
+        'message': 'Logout successful. Please discard your token.',
+        'status': 'success'
+    }), 200
+
+
+# @auth_bp.route('/logout', methods=['POST'])
+# def logout():
+#     email = session.get('email')
+#     username = session.get('username')
     
      
-    # Check if user is logged in
-    if not email:
-        return jsonify({
-            'message': 'User not logged in or session expired.',
-            'status': 'error'
-        }), 401
+#     # Check if user is logged in
+#     if not email:
+#         return jsonify({
+#             'message': 'User not logged in or session expired.',
+#             'status': 'error'
+#         }), 401
     
-    # Prepare the logout message
-    logout_message = f'User {username} with email {email} logged out successfully.'
+#     # Prepare the logout message
+#     logout_message = f'User {username} with email {email} logged out successfully.'
     
-    # Clear the session
-    session.clear()
+#     # Clear the session
+#     session.clear()
     
-    # Optionally, clear the session cookie
-    response = jsonify({
-        'message': logout_message,
-        'status': 'success'
-    })
-    response.set_cookie('session', '', expires=0)  # Clear the cookie
+#     # Optionally, clear the session cookie
+#     response = jsonify({
+#         'message': logout_message,
+#         'status': 'success'
+#     })
+#     response.set_cookie('session', '', expires=0)  # Clear the cookie
     
-    return response
+#     return response
 
 def login_required(f):
     @wraps(f)
