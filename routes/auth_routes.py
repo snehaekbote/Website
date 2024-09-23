@@ -1,5 +1,4 @@
-from flask import current_app , Blueprint, render_template, request, session, jsonify
-import mysql.connector
+from flask import current_app, Blueprint, render_template, request, session, jsonify
 from mysql.connector import IntegrityError
 from db.db import get_db_connection
 import smtplib
@@ -295,14 +294,6 @@ def logout():
     
 #     return response
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            # Return a JSON response with a 401 status code if not logged in
-            return jsonify({'error': 'Unauthorized access. Please log in.'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
 
 def generate_reset_token(email):
     expiration = datetime.utcnow() + timedelta(minutes=30)
