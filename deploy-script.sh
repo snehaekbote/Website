@@ -1,10 +1,13 @@
 #/bin/bash
 
-# Reset any local changes
-git reset --hard origin/main
+# Stash any local changes
+git stash --include-untracked
 
-# Pull the latest code (this won't fail since there are no local changes)
-git pull origin main
+# Pull the latest code with rebase
+git pull --rebase origin main
+
+# Apply stashed changes, if any
+git stash pop || true
 
 # Activate your virtual environment
 source venv/bin/activate
