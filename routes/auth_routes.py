@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 from flask import current_app , Blueprint, render_template, request, session, jsonify
 import mysql.connector
@@ -445,6 +446,9 @@ def test_post():
 =======
 from flask import current_app , Blueprint, render_template, request, session, jsonify
 import mysql.connector
+=======
+from flask import current_app, Blueprint, render_template, request, session, jsonify
+>>>>>>> c3cd8395d96c1a70ae15f95e842a471806c038a1
 from mysql.connector import IntegrityError
 from db.db import get_db_connection
 import smtplib
@@ -740,6 +744,7 @@ def logout():
     
 #     return response
 
+<<<<<<< HEAD
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -748,6 +753,8 @@ def login_required(f):
             return jsonify({'error': 'Unauthorized access. Please log in.'}), 401
         return f(*args, **kwargs)
     return decorated_function
+=======
+>>>>>>> c3cd8395d96c1a70ae15f95e842a471806c038a1
 
 def generate_reset_token(email):
     expiration = datetime.utcnow() + timedelta(minutes=30)
@@ -886,4 +893,7 @@ def reset_password(token):
 def test_post():
     return "POST request received", 200
 
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> c3cd8395d96c1a70ae15f95e842a471806c038a1
