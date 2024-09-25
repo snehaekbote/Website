@@ -230,7 +230,7 @@ def login():
             # Generate JWT token
             token = jwt.encode({
                 'user_id': user.id,
-                'username': user.username,
+                'email': user.email,
                 'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
             }, current_app.config['SECRET_KEY'], algorithm='HS256')
             

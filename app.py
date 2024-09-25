@@ -23,9 +23,11 @@ app = Flask(__name__)
 app.config.from_object(Config)  # Load configuration from Config class
 
 
-# CORS(app)# This will enable CORS for all routes
-CORS(app, origins=["http://13.234.113.49","http://13.235.115.160","http://13.201.168.191"])
+# Fetch the origins from environment variables
+origins = os.getenv("ALLOWED_ORIGINS").split(",")
 
+# Use CORS with the loaded origins
+CORS(app, origins=origins)
 
 
 # Initialize SQLAlchemy
@@ -58,7 +60,7 @@ def automated_export():
 
 # Set up APScheduler for automated tasks
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=automated_export, trigger="interval", minutes=30)  # Runs every 1 minute
+scheduler.add_job(func=automated_export, trigger="interval", minutes=1)  # Runs every 1 minute
 scheduler.start()
 
 # Handle shutdown signals (like Ctrl+C) gracefully
@@ -81,10 +83,11 @@ def test_db_connection():
     except Exception as e:
         return f"Failed to connect to the database. Error: {e}"
     
-
+# Get the port from the environment, default to 5000 if not set
+port = int(os.getenv("PORT"))
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=port, debug=True)
     except (KeyboardInterrupt, SystemExit):
         shutdown_scheduler(None, None) 
