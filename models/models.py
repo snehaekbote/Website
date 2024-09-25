@@ -11,7 +11,6 @@ class User(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone_number = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    # created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # New fields for OTP
     otp = db.Column(db.String(6), nullable=True)  # Store OTP as a string of 6 characters
     otp_expiry = db.Column(db.DateTime, nullable=True)  # Time when OTP expires
@@ -66,17 +65,12 @@ class Contact(db.Model):
     email = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     queries = db.Column(db.String(500), nullable=False)
-    # user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key to User
-
-    # user = db.relationship('User', backref=db.backref('contacts', lazy=True))
-    # # created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, username, email, phone_number, queries):
         self.username = username
         self.email = email
         self.phone_number = phone_number
         self.queries = queries
-        # self.user_id = user_id
 
     def __repr__(self):
         return f'<Contact {self.username}>'

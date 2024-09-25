@@ -24,10 +24,11 @@ app.config.from_object(Config)  # Load configuration from Config class
 
 
 # Fetch the origins from environment variables
-origins = os.getenv("ALLOWED_ORIGINS").split(",")
-
+origins1 = os.getenv("ALLOWED_ORIGINS1").split(",")
+origins2 = os.getenv("ALLOWED_ORIGINS2").split(",")
 # Use CORS with the loaded origins
-CORS(app, origins=origins)
+CORS(app, origins1=origins1)
+CORS(app, origins2=origins2)
 
 
 # Initialize SQLAlchemy

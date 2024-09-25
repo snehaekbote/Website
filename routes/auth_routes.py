@@ -231,6 +231,7 @@ def login():
             token = jwt.encode({
                 'user_id': user.id,
                 'email': user.email,
+                'username':user.username,
                 'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
             }, current_app.config['SECRET_KEY'], algorithm='HS256')
             
@@ -265,35 +266,6 @@ def logout():
         'message': 'Logout successful. Please discard your token.',
         'status': 'success'
     }), 200
-
-
-# @auth_bp.route('/logout', methods=['POST'])
-# def logout():
-#     email = session.get('email')
-#     username = session.get('username')
-    
-     
-#     # Check if user is logged in
-#     if not email:
-#         return jsonify({
-#             'message': 'User not logged in or session expired.',
-#             'status': 'error'
-#         }), 401
-    
-#     # Prepare the logout message
-#     logout_message = f'User {username} with email {email} logged out successfully.'
-    
-#     # Clear the session
-#     session.clear()
-    
-#     # Optionally, clear the session cookie
-#     response = jsonify({
-#         'message': logout_message,
-#         'status': 'success'
-#     })
-#     response.set_cookie('session', '', expires=0)  # Clear the cookie
-    
-#     return response
 
 
 def generate_reset_token(email):
@@ -359,8 +331,10 @@ def request_password_reset():
                 cursor.execute("INSERT INTO password_reset_tokens (email, token, expiration) VALUES (%s, %s, %s)",
                                (email, token, expiration))
                 conn.commit()
-                # Construct the reset link with the correct base URL
-                reset_link = f"http://13.201.168.191/reset-password/{token}"
+                # Construct the reset link using a domain name
+                base_url = os.getenv("ALLOWED_ORIGINS2")  # Define BASE_URL in your .env file
+                reset_link = f"{base_url}/reset-password/{token}"
+                
                 send_password_reset_email(email, reset_link)
                 return jsonify({'status': 'success', 'message': 'A password reset link has been sent to your email.'}), 200
             else:
