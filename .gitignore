@@ -1,6 +1,7 @@
 .env
 venv/
 __pycache__/
+
 api_export_automated.xlsx
 # Ignore unnecessary files
 .git
@@ -8,3 +9,6 @@ api_export_automated.xlsx
 *.pyo
 *.pyd
 *.db
+
+api_export_automated.xlsx
+
