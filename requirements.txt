@@ -1,6 +1,6 @@
 Flask
 Flask-Bcrypt
-Flask-Cors
+flask-cors==5.0.0
 Flask-Login
 Flask-Mail
 Flask-Migrate

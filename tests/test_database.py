@@ -12,7 +12,7 @@ DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_NAME = os.getenv('DB_NAME')
 
-DATABASE_URL = f"mysql+pymysql://admin:{Config.DB_PASSWORD}@{Config.DB_HOST}/{Config.DB_NAME}"
+DATABASE_URL = f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASSWORD}@{Config.DB_HOST}/{Config.DB_NAME}"
 
 def test_database_connection():
     try:

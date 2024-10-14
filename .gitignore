@@ -2,3 +2,9 @@
 venv/
 __pycache__/
 api_export_automated.xlsx
+# Ignore unnecessary files
+.git
+*.pyc
+*.pyo
+*.pyd
+*.db

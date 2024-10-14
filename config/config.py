@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+
 class Config:
     DB_HOST = os.getenv('DB_HOST')
     DB_USER = os.getenv('DB_USER')
@@ -27,3 +29,7 @@ class Config:
         'database': DB_NAME
     }
 
+# Debugging output to verify variables
+print("DB_HOST:", Config.DB_HOST)
+print("DB_USER:", Config.DB_USER)
+print("DB_PASSWORD:", Config.DB_PASSWORD)  # This should now print "Admin#235"

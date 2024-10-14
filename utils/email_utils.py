@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from config.config import Config
 import logging
+from email.mime.base import MIMEBase
+from email import encoders
 
 def send_confirmation_email(to_email, username):
     with app.app_context():
@@ -28,33 +30,60 @@ def send_confirmation_email(to_email, username):
 
 
 
-def send_career_email(to_email, username, profile, resume_filename, application_id):
-    # Create the email body as a string
+def send_career_email(to_email, username, profile, resume_filename, resume_data):
+    # Create the email body using HTML
     body = f"""
-    Dear {username},
-
-    Thank you for applying for the position of {profile} at Turtu India LLP.
-
-    We have successfully received your application. Below are the details of your submission:
-
-    - Application ID: {application_id}
-    - Position Applied: {profile}
-    - Resume File: {resume_filename}
-
-    Our HR team is currently reviewing your application. If your qualifications match the job requirements, we will contact you to schedule the next steps in the hiring process.
-
-    Thank you for your interest in joining Turtu India LLP.
-
-    Best regards,
-    The Turtu India LLP Team
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+        <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #333;">Dear {username},</h2>
+            <p style="font-size: 16px; color: #555;">
+                Thank you for applying for the position of <strong>{profile}</strong> at <strong style="color: #0078D4;">Turtu</strong>.
+            </p>
+            <p style="font-size: 16px; color: #555;">
+                We are pleased to inform you that we have successfully received your application. Here are the details of your submission:
+            </p>
+            <ul style="font-size: 16px; color: #555; line-height: 1.6;">
+                <li><strong>Position Applied:</strong> {profile}</li>
+                <li><strong>Resume File:</strong> {resume_filename}</li>
+            </ul>
+            <p style="font-size: 16px; color: #555;">
+                Our HR team is currently reviewing your application. If your qualifications match the job requirements, we will reach out to schedule the next steps in the hiring process.
+            </p>
+            <p style="font-size: 16px; color: #555;">
+                Thank you for your interest in joining <strong style="color: #0078D4;">Turtu</strong>. We appreciate the time and effort you put into your application.
+            </p>
+            <p style="font-size: 16px; color: #333; font-weight: bold;">
+                Best regards,<br>
+                The Turtu Team
+            </p>
+        </div>
+    </body>
+    </html>
     """
 
     # Create the MIME message
     msg = MIMEMultipart()
-    msg.attach(MIMEText(body, 'plain'))  # Attach the plain text email content
-    msg['Subject'] = 'Job Application Confirmation - Turtu India LLP'
+    msg.attach(MIMEText(body, 'html'))  # Attach the HTML email content
+    msg['Subject'] = 'Job Application Confirmation - Turtu'
     msg['From'] = Config.SMTP_USERNAME
     msg['To'] = to_email
+
+    # Adding the resume as an attachment
+    if resume_data:
+        # Create MIMEBase object for the attachment
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(resume_data)  # Attach the binary resume data
+        encoders.encode_base64(part)  # Encode the payload in Base64
+
+        # Add the header with the resume filename
+        part.add_header(
+            'Content-Disposition',
+            f'attachment; filename="{resume_filename}"'
+        )
+
+        # Attach the resume to the email
+        msg.attach(part)
 
     try:
         # Connect to the SMTP server and send the email
@@ -73,19 +102,21 @@ def send_query_contact_email(to_email, username, query_details):
         # Construct the body of the email with the username and query details
         body = f"""
         <html>
-            <body>
-                <p>Dear {username},</p>
-                <p>Thank you for reaching out to us with your query. We have received your message and will respond as soon as possible.</p>
-                <p><strong>Your Query:</strong></p>
-                <p>{query_details}</p>
-                <p>Best Regards,<br>Turtu India LLP Support Team</p>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+                    <p style="font-size: 18px;">Dear <strong>{username}</strong>,</p>
+                    <p>Thank you for reaching out to us with your query. We have received your message and will respond as soon as possible.</p>
+                    <p style="font-weight: bold;">Your Query:</p>
+                    <p style="border-left: 4px solid #007bff; padding-left: 10px;">{query_details}</p>
+                    <p>Best Regards,<br><strong>Turtu Support Team</strong></p>
+                </div>
             </body>
         </html>
         """
 
     msg = MIMEMultipart()
     msg.attach(MIMEText(body, 'html'))
-    msg['Subject'] = 'We have received your query'
+    msg['Subject'] = 'We Have Received Your Query'
     msg['From'] = Config.SMTP_USERNAME
     msg['To'] = to_email
 
@@ -100,22 +131,30 @@ def send_query_contact_email(to_email, username, query_details):
     finally:
         server.quit()
 
-# Function to send OTP email (you need to implement this)
 def send_otp_email(to_email, otp):
-    body = f"""
-    <p>Your OTP for login is: <strong>{otp}</strong></p>
-    <p>If you did not request this, please ignore this email.</p>
-    """
+    with app.app_context():
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+                    <p style="font-size: 18px;">Hello,</p>
+                    <p>Your OTP for login is: <strong style="font-size: 24px; color: #007bff;">{otp}</strong></p>
+                    <p>If you did not request this, please ignore this email.</p>
+                    <p>Thank you,<br><strong>Turtu Support Team</strong></p>
+                </div>
+            </body>
+        </html>
+        """
     msg = MIMEText(body, 'html')
     msg['Subject'] = 'Your OTP Code'
-    msg['From'] = app.config['SMTP_USERNAME']
+    msg['From'] = Config.SMTP_USERNAME
     msg['To'] = to_email
 
     try:
         # Connect to SMTP server
-        server = smtplib.SMTP(app.config['SMTP_SERVER'], app.config['SMTP_PORT'])
+        server = smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT)
         server.starttls()
-        server.login(app.config['SMTP_USERNAME'], app.config['SMTP_PASSWORD'])
+        server.login(Config.SMTP_USERNAME, Config.SMTP_PASSWORD)
         
         # Send the email
         server.send_message(msg)
@@ -136,12 +175,27 @@ def send_password_reset_email(to_email, reset_link):
         print("Entering send_password_reset_email function...")  # Debugging
         print(f"Reset link: {reset_link}")  # Debugging
 
+        # Construct the email body with styling
         body = f"""
-        <p>You have requested a password reset. Click the link below to reset your password:</p>
-        <p><a href="{reset_link}">Reset Password</a></p>
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+                    <p style="font-size: 18px;">You have requested a password reset. Please click the link below to reset your password:</p>
+                    <p>
+                        <a href="{reset_link}" style="padding: 10px 15px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px;">
+                            Reset Password
+                        </a>
+                    </p>
+                    <p style="font-size: 14px; color: #666;">If you did not request a password reset, please ignore this email.</p>
+                    <p>Best Regards,<br><strong>Turtu Support Team</strong></p>
+                </div>
+            </body>
+        </html>
         """
     except Exception as e:
-        print(f"Error in sending email: {e}")  # Log the exception
+        print(f"Error in constructing email body: {e}")  # Log the exception
+        return  # Exit the function if there's an error
+
     msg = MIMEMultipart()
     msg.attach(MIMEText(body, 'html'))
     msg['Subject'] = 'Password Reset Request'

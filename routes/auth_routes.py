@@ -1,5 +1,6 @@
-from flask import current_app , Blueprint, render_template, request, session, jsonify
+from flask import current_app , Blueprint, render_template, request, session, jsonify, url_for
 import mysql.connector
+from flask_login import login_required, current_user
 from mysql.connector import IntegrityError
 from db.db import get_db_connection
 import smtplib
@@ -27,7 +28,6 @@ from sqlalchemy.sql import text
 from apscheduler.schedulers.background import BackgroundScheduler
 from config.config import Config
 
-
 auth_bp = Blueprint('auth', __name__)
 
 # Define the timezone
@@ -44,6 +44,88 @@ SECRET_KEY = 'SECRET_KEY'
 def home():
     return render_template('home.html')
 
+
+
+# @auth_bp.route('/register', methods=['POST'])
+# def register():
+#     if request.method == 'POST':
+#         username = request.json.get('username')
+#         email = request.json.get('email')
+#         phone_number = request.json.get('phone_number')
+#         password = request.json.get('password')
+#         confirm_password = request.json.get('confirm_password')
+
+#         # Validate the password
+#         if not validate_password(password):
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Password does not meet the requirements.'
+#             }), 400
+
+#         # Check if passwords match
+#         if password != confirm_password:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Passwords do not match.'
+#             }), 400
+
+#         # Check if email or phone number already exists in the main User table
+#         user = User.query.filter_by(email=email).first()
+#         if user:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Email already exists in the main user database.'
+#             }), 400
+
+#         if User.query.filter_by(phone_number=phone_number).first():
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Phone number already exists in the main user database.'
+#             }), 400
+
+#         # Generate OTP and set expiry
+#         otp = str(random.randint(100000, 999999))
+#         otp_expiry = datetime.now() + timedelta(minutes=10)
+
+#         try:
+#             # Hash the password
+#             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+#             # Create a new user entry with `is_verified` set to False
+#             new_user = User(
+#                 username=username,
+#                 email=email,
+#                 phone_number=phone_number,
+#                 password=hashed_password,
+#                 otp=otp,
+#                 otp_expiry=otp_expiry,
+#                 is_verified=False,  # User is not verified yet
+#                 registration_date=datetime.now()
+#             )
+
+#             db.session.add(new_user)
+#             db.session.commit()
+
+#             # Send OTP email
+#             send_otp_email(to_email=email, otp=otp)
+
+#             return jsonify({
+#                 'status': 'success',
+#                 'message': 'User registered successfully! Check your email for the OTP.'
+#             }), 201
+
+#         except Exception as e:
+#             db.session.rollback()
+#             return jsonify({'status': 'error', 'message': str(e)}), 500
+
+#     return jsonify({
+#         'status': 'error',
+#         'message': 'Method not allowed. Please use POST.'
+#     }), 405
+
+
+ADMIN_KEY = "supersecretadminkey"  # Store securely in env variables
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
@@ -52,6 +134,7 @@ def register():
         phone_number = request.json.get('phone_number')
         password = request.json.get('password')
         confirm_password = request.json.get('confirm_password')
+        admin_key = request.json.get('admin_key', None)  # Optional, defaults to None if not provided
 
         # Validate the password
         if not validate_password(password):
@@ -67,8 +150,9 @@ def register():
                 'message': 'Passwords do not match.'
             }), 400
 
-        # Check if email or phone number already exists in the main User table
-        if User.query.filter_by(email=email).first():
+        # Check if email or phone number already exists
+        user = User.query.filter_by(email=email).first()
+        if user:
             return jsonify({
                 'status': 'error',
                 'message': 'Email already exists in the main user database.'
@@ -80,46 +164,33 @@ def register():
                 'message': 'Phone number already exists in the main user database.'
             }), 400
 
-        # Check if the user is already in the temp_users table
-        sql = text("SELECT * FROM temp_users WHERE email = :email")
-        temp_user = db.session.execute(sql, {'email': email}).fetchone()
+        # Determine the role: 'user' by default, 'admin' if the correct admin_key is provided
+        role = 'user'
+        if admin_key and admin_key == ADMIN_KEY:
+            role = 'admin'
 
         # Generate OTP and set expiry
         otp = str(random.randint(100000, 999999))
         otp_expiry = datetime.now() + timedelta(minutes=10)
 
         try:
-            if temp_user:
-                # User exists in temp_users, update the OTP and expiry
-                sql = text(
-                    "UPDATE temp_users SET otp = :otp, otp_expiry = :otp_expiry, registration_date = :registration_date "
-                    "WHERE email = :email"
-                )
-                db.session.execute(sql, {
-                    'otp': otp,
-                    'otp_expiry': otp_expiry,
-                    'registration_date': datetime.now(),
-                    'email': email
-                })
-            else:
-                
-                # Insert new record into temp_users
-                hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-                sql = text(
-                    "INSERT INTO temp_users (username, email, phone_number, password, otp, otp_expiry, registration_date) "
-                    "VALUES (:username, :email, :phone_number, :password, :otp, :otp_expiry, :registration_date)"
-                )
-                db.session.execute(sql, {
-                    'username': username,
-                    'email': email,
-                    'phone_number': phone_number,
-                    'password': hashed_password,
-                    'otp': otp,
-                    'otp_expiry': otp_expiry,
-                    'registration_date': datetime.now()
-                })
-            
-            # Commit the transaction
+            # Hash the password
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+            # Create a new user entry
+            new_user = User(
+                username=username,
+                email=email,
+                phone_number=phone_number,
+                password=hashed_password,
+                otp=otp,
+                otp_expiry=otp_expiry,
+                is_verified=False,  # User is not verified yet
+                registration_date=datetime.now(),
+                role=role  # Set role as 'admin' or 'user'
+            )
+
+            db.session.add(new_user)
             db.session.commit()
 
             # Send OTP email
@@ -139,6 +210,47 @@ def register():
         'message': 'Method not allowed. Please use POST.'
     }), 405
 
+@auth_bp.route('/resend-otp', methods=['POST'])
+def resend_otp():
+    email = request.json.get('email')
+
+    # Check if user exists
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found.'
+        }), 404
+
+    # Check if the OTP has expired
+    if user.otp_expiry and datetime.now() < user.otp_expiry:
+        return jsonify({
+            'status': 'error',
+            'message': 'OTP is still valid. Please check your email.'
+        }), 400
+
+    # Generate new OTP and set new expiry
+    new_otp = str(random.randint(100000, 999999))
+    new_otp_expiry = datetime.now() + timedelta(minutes=10)
+
+    try:
+        # Update the user's OTP and expiry in the database
+        user.otp = new_otp
+        user.otp_expiry = new_otp_expiry
+        db.session.commit()
+
+        # Send new OTP email
+        send_otp_email(to_email=email, otp=new_otp)
+
+        return jsonify({
+            'status': 'success',
+            'message': 'New OTP has been sent to your email.'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
 def validate_password(password):
     """ Validate password strength """
     if len(password) < 8:
@@ -153,6 +265,45 @@ def validate_password(password):
         return False
     return True 
 
+@auth_bp.route('/verify_otp', methods=['POST'])
+def verify_otp():
+    email = request.json.get('email')
+    otp = request.json.get('otp')
+
+    # Fetch the user by email
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found.'
+        }), 404
+
+    # Check if OTP is valid
+    if user.otp != otp:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid OTP.'
+        }), 400
+
+    # Check if OTP has expired
+    if user.otp_expiry < datetime.now():
+        return jsonify({
+            'status': 'error',
+            'message': 'OTP has expired.'
+        }), 400
+
+    # Mark the user as verified
+    user.is_verified = True
+    user.otp = None
+    user.otp_expiry = None
+    db.session.commit()
+
+    return jsonify({
+        'status': 'success',
+        'message': 'User has been successfully verified.'
+    }), 200
+
 @auth_bp.route('/verify_email', methods=['POST'])
 def verify_email():
     print(f"Request received: {request.json}")
@@ -162,58 +313,7 @@ def verify_email():
     else:
         return jsonify({'exists': False}), 404
     
-@auth_bp.route('/verify_otp', methods=['POST'])
-def verify_otp():
-    if request.method == 'POST':
-        email = request.json.get('email')
-        otp = request.json.get('otp')
 
-        # Retrieve registration data from temporary storage
-        sql = text("SELECT * FROM temp_users WHERE email = :email")
-        result = db.session.execute(sql, {'email': email}).fetchone()
-
-        if result:
-            # Access columns by index
-            temp_user = {
-                'username': result[1],  # Adjust index based on column order
-                'email': result[2],     # Adjust index based on column order
-                'phone_number': result[3],  # Adjust index based on column order
-                'password': result[4],  # Adjust index based on column order
-                'otp': result[5],       # Adjust index based on column order
-                'otp_expiry': result[6]  # Adjust index based on column order
-            }
-
-            if temp_user['otp'] == otp and temp_user['otp_expiry'] > datetime.now():
-                # Create and save the new user in the main database
-                try:
-                    new_user = User(
-                        username=temp_user['username'],
-                        email=email,
-                        phone_number=temp_user['phone_number'],
-                        password=temp_user['password'],
-                        email_verified=True
-                    )
-                    db.session.add(new_user)
-                    db.session.commit()
-
-                    # Remove from temporary storage
-                    delete_sql = text("DELETE FROM temp_users WHERE email = :email")
-                    db.session.execute(delete_sql, {'email': email})
-                    db.session.commit()
-
-                    return jsonify({'status': 'success', 'message': 'Email verified successfully! You can now log in.'}), 200
-                except Exception as e:
-                    db.session.rollback()
-                    return jsonify({'status': 'error', 'message': str(e)}), 500
-            else:
-                return jsonify({'status': 'error', 'message': 'Invalid or expired OTP.'}), 400
-        else:
-            return jsonify({'status': 'error', 'message': 'No user found with this email.'}), 404
-
-    return jsonify({
-        'status': 'error',
-        'message': 'Method not allowed. Please use POST.'
-    }), 405
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -224,9 +324,10 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password, password):
-            if not user.email_verified:
+            if not user.is_verified:
                 return jsonify({'status': 'error', 'message': 'Email not verified. Please verify your email.'}), 403
             
+
             # Generate JWT token
             token = jwt.encode({
                 'user_id': user.id,
@@ -235,8 +336,8 @@ def login():
                 'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
             }, current_app.config['SECRET_KEY'], algorithm='HS256')
             
-            # session['username'] = user.username
-            # session['email'] = email
+            session['username'] = user.username
+            session['email'] = email
             return jsonify({
                 'status': 'success',
                 'message': 'Login successful!',
@@ -257,22 +358,13 @@ def login():
         'message': 'GET method not supported. Please send a POST request.'
     }), 405
 
-@auth_bp.route('/logout', methods=['POST'])
-def logout():
-    # No session management is needed since we are using JWT tokens
-    # The client can simply discard the token to "log out"
-
-    return jsonify({
-        'message': 'Logout successful. Please discard your token.',
-        'status': 'success'
-    }), 200
 
 
 def generate_reset_token(email):
     expiration = datetime.utcnow() + timedelta(minutes=30)
     try:
         # Since you're using PyJWT 2.x.x, no need to decode the token.
-        token = jwt.encode({'email': email, 'exp': expiration}, current_app.config[SECRET_KEY], algorithm='HS256')
+        token = jwt.encode({'email': email, 'exp': expiration}, current_app.config['SECRET_KEY'], algorithm='HS256')
         # If PyJWT returns a byte string, decode it to a string
         print(f"Generated token: {token}")
         return token
@@ -285,7 +377,7 @@ def verify_reset_token(token):
     print(f"Received token for verification: {token}")
     try:
         # Decode the token using the secret key and HS256 algorithm
-        data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        data = jwt.decode(token, current_app.config[SECRET_KEY], algorithms=['HS256'])
         print(f"Decoded token data: {data}")
         return data['email']
     except jwt.ExpiredSignatureError:
@@ -300,7 +392,23 @@ def verify_reset_token(token):
         # Handle any other exceptions that may occur
         print(f"Unexpected error: {e}")
         return None
+    
+# def get_db_connection():
+#     try:
+#         print("Attempting to connect to the database...")
+#         conn = pymysql.connect(
+#             host='13.234.113.49',
+#             user='admin',
+#             password='Admin#235',
+#             db='turtu_website'
+#         )
+#         print("Successfully connected to the database!")
+#         return conn
+#     except pymysql.MySQLError as e:
+#         print(f"Database connection error: {e}")
+#         return None
 
+    
 @auth_bp.route('/request_password_reset', methods=['POST'])
 def request_password_reset():
     email = request.form.get('email', '').strip()
@@ -310,7 +418,7 @@ def request_password_reset():
     
     conn = None
     try:
-        print("Getting database connection...")  # Debugging
+        print(f"Email received for password reset: {email}")  # Debugging
         conn = get_db_connection()
         if conn is None:
             print("Database connection failed!")  # Debugging
@@ -357,8 +465,12 @@ def reset_password(token):
     try:
         if request.method == 'POST':
             # Retrieve the new password from the form data
-            new_password = request.form.get('password')
-            confirm_password = request.form.get('confirm_password')
+            data = request.get_json()
+            new_password = data.get('password')
+            confirm_password = data.get('confirm_password')
+            print(f"Received password: {new_password}")
+            print(f"Received confirm_password: {confirm_password}") 
+
 
             # Ensure both password fields are provided
             if not new_password or not confirm_password:
@@ -399,8 +511,6 @@ def reset_password(token):
     finally:
         if conn:
             conn.close()
-
-
 
 
 @auth_bp.route('/test_post', methods=['GET', 'POST'])
