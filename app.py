@@ -167,10 +167,6 @@ def handle_file_too_large(e):
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(user_bp, url_prefix='/api')
-
-# Register the blueprint
-app.register_blueprint(auth_bp, url_prefix='/api')
-app.register_blueprint(user_bp, url_prefix='/api')
 # app.register_blueprint(data_bp, url_prefix='/api')
 # print(app.url_map)
 
