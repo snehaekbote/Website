@@ -226,10 +226,11 @@ def test_db_connection():
 
 port = int(os.getenv("PORT", 5000))
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=port, debug=True)
-     app.run(host='0.0.0.0', port=port, debug=True)
+
+
+     
 
     # try:
     # except (KeyboardInterrupt, SystemExit):
