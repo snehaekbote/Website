@@ -229,9 +229,9 @@ port = int(os.getenv("PORT", 5000))
 if __name__ == '__main__':
 
     app.run(host='0.0.0.0', port=port, debug=True)
+     app.run(host='0.0.0.0', port=port, debug=True)
 
     # try:
-        app.run(host='0.0.0.0', port=port, debug=True)
     # except (KeyboardInterrupt, SystemExit):
     #     shutdown_scheduler(None, None) 
 
