@@ -131,25 +131,70 @@ def send_query_contact_email(to_email, username, query_details):
     finally:
         server.quit()
 
+# def send_otp_email(to_email, otp):
+#     with app.app_context():
+#         body = f"""
+#         <html>
+#             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+#                 <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+#                     <p style="font-size: 18px;">Hello,</p>
+#                     <p>Your OTP for login is: <strong style="font-size: 24px; color: #007bff;">{otp}</strong></p>
+#                     <p>If you did not request this, please ignore this email.</p>
+#                     <p>Thank you,<br><strong>Turtu Support Team</strong></p>
+#                 </div>
+#             </body>
+#         </html>
+#         """
+#     msg = MIMEText(body, 'html')
+#     msg['Subject'] = 'Your OTP Code'
+#     msg['From'] = Config.SMTP_USERNAME
+#     msg['To'] = to_email
+
+#     try:
+#         # Connect to SMTP server
+#         server = smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT)
+#         server.starttls()
+#         server.login(Config.SMTP_USERNAME, Config.SMTP_PASSWORD)
+        
+#         # Send the email
+#         server.send_message(msg)
+#         logging.info(f"OTP email sent successfully to {to_email}")
+#         return True
+    
+#     except smtplib.SMTPException as e:
+#         # Log the error
+#         logging.error(f"Failed to send OTP email to {to_email}: {e}")
+#         return False
+    
+#     finally:
+#         if server:
+#             server.quit()
+
+import logging
+import smtplib
+from email.mime.text import MIMEText
+
 def send_otp_email(to_email, otp):
-    with app.app_context():
-        body = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
-                    <p style="font-size: 18px;">Hello,</p>
-                    <p>Your OTP for login is: <strong style="font-size: 24px; color: #007bff;">{otp}</strong></p>
-                    <p>If you did not request this, please ignore this email.</p>
-                    <p>Thank you,<br><strong>Turtu Support Team</strong></p>
-                </div>
-            </body>
-        </html>
-        """
+    body = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="margin: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+                <p style="font-size: 18px;">Hello,</p>
+                <p>Your OTP for login is: <strong style="font-size: 24px; color: #007bff;">{otp}</strong></p>
+                <p>If you did not request this, please ignore this email.</p>
+                <p>Thank you,<br><strong>Turtu Support Team</strong></p>
+            </div>
+        </body>
+    </html>
+    """
+    
     msg = MIMEText(body, 'html')
     msg['Subject'] = 'Your OTP Code'
     msg['From'] = Config.SMTP_USERNAME
     msg['To'] = to_email
-
+    
+    server = None  # Initialize server variable
+    
     try:
         # Connect to SMTP server
         server = smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT)
