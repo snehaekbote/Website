@@ -52,7 +52,6 @@ def test_register_success(client):
         'password': 'Password@123',
         'confirm_password': 'Password@123'
     })
-    print(f"Response data: {response.json}")
     assert response.status_code == 201
     assert response.json['status'] == 'success'
     assert 'User registered successfully' in response.json['message']
