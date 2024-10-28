@@ -136,6 +136,8 @@ def register():
         confirm_password = request.json.get('confirm_password')
         admin_key = request.json.get('admin_key', None)  # Optional, defaults to None if not provided
 
+        print(f"Received registration data: {request.json}")  # Debugging line
+
         # Validate the password
         if not validate_password(password):
             return jsonify({
@@ -153,12 +155,14 @@ def register():
         # Check if email or phone number already exists
         user = User.query.filter_by(email=email).first()
         if user:
+            print(f"User already exists with email: {email}")  # Debugging line
             return jsonify({
                 'status': 'error',
                 'message': 'Email already exists in the main user database.'
             }), 400
 
         if User.query.filter_by(phone_number=phone_number).first():
+            print(f"User already exists with phone number: {phone_number}")  # Debugging line
             return jsonify({
                 'status': 'error',
                 'message': 'Phone number already exists in the main user database.'
