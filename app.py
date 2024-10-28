@@ -168,6 +168,7 @@ def handle_file_too_large(e):
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(user_bp, url_prefix='/api')
 
+
 # Register the blueprint
 # app.register_blueprint(data_bp, url_prefix='/api')
 # print(app.url_map)
@@ -224,8 +225,12 @@ def test_db_connection():
 
 port = int(os.getenv("PORT", 5000))
 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=True)
+
+    
+
 
     
 
