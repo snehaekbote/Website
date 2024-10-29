@@ -48,6 +48,7 @@ def generate_unique_phone():
 @patch('utils.email_utils.send_otp_email')
 def test_register_success(mock_send_email, client):
     mock_send_email.return_value = None  # Mock email sending to do nothing
+    mock_send_email.side_effect = lambda *args, **kwargs: print("Mock email sent!")  # Debugging line
     response = client.post('/api/register', json={
         'username': 'testuser_' + str(random.randint(1000, 9999)),  # Random suffix for uniqueness
         'email': generate_unique_email(),
@@ -55,6 +56,8 @@ def test_register_success(mock_send_email, client):
         'password': 'Password@123',
         'confirm_password': 'Password@123'
     })
+
+    print(response.json)  # Log the full response
     assert response.status_code == 201
     assert response.json['status'] == 'success'
     assert 'User registered successfully' in response.json['message']
