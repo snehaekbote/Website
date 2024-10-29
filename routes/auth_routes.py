@@ -198,7 +198,7 @@ def register():
             db.session.commit()
 
             # Send OTP email
-            send_otp_email(to_email=email, otp=otp)
+            # send_otp_email(to_email=email, otp=otp)
 
             return jsonify({
                 'status': 'success',
