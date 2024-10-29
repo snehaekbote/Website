@@ -118,6 +118,7 @@ from config.config import Config
 from models.models import db, User
 from routes.auth_routes import auth_bp
 from routes.user_routes import user_bp
+import logging
 
 # from routes.data_routes import data_bp, create_engine_from_config, export_multiple_tables_to_excel
 
@@ -134,6 +135,15 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+@app.errorhandler(500)
+def internal_error(error):
+    logging.exception("An error occurred during registration.")
+    return jsonify({'status': 'error', 'message': 'Internal Server Error'}), 500
 
 # Fetch the origins from environment variables
 origins1 = os.getenv("ALLOWED_ORIGINS1").split(",")

@@ -206,6 +206,7 @@ def register():
             }), 201
 
         except Exception as e:
+            print(f"Exception during registration: {e}")
             db.session.rollback()
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
