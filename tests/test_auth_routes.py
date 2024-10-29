@@ -34,6 +34,7 @@ def cleanup_test_users():
 import random
 import string
 import time
+from unittest.mock import patch
 
 # Helper function to generate unique email
 def generate_unique_email():
@@ -44,7 +45,9 @@ def generate_unique_email():
 def generate_unique_phone():
     return "1234" + ''.join(random.choices(string.digits, k=6))
 
-def test_register_success(client):
+@patch('utils.email_utils.send_otp_email')
+def test_register_success(mock_send_email, client):
+    mock_send_email.return_value = None  # Mock email sending to do nothing
     response = client.post('/api/register', json={
         'username': 'testuser_' + str(random.randint(1000, 9999)),  # Random suffix for uniqueness
         'email': generate_unique_email(),
