@@ -66,7 +66,7 @@ def generate_unique_phone():
 from unittest.mock import patch
 import random
 
-@patch('utils.email_utils.send_otp_email')  # Adjust path if needed
+@patch('routes.auth_routes.send_otp_email')  # Adjust path if needed
 def test_register_success(mock_send_email, client):
     # Mocking the send_otp_email to print a message instead of sending an email
     mock_send_email.side_effect = lambda *args, **kwargs: print("Mock email sent!")
