@@ -92,7 +92,7 @@ def test_register_success(mock_send_email, client):
     assert 'User registered successfully' in response.json['message']
 
     # Confirm that the send_otp_email was called exactly once
-    mock_send_email.assert_called_once_with(user_data['email'], otp=ANY)
+    mock_send_email.assert_called_once_with(to_email=user_data['email'], otp=ANY)
 
 def test_register_password_validation_failure(client):
     response = client.post('/api/register', json={
