@@ -36,6 +36,7 @@ import string
 import time
 from unittest.mock import patch
 
+
 # Helper function to generate unique email
 def generate_unique_email():
     timestamp = int(time.time())
@@ -45,22 +46,53 @@ def generate_unique_email():
 def generate_unique_phone():
     return "1234" + ''.join(random.choices(string.digits, k=6))
 
-@patch('utils.email_utils.send_otp_email')
+# @patch('utils.email_utils.send_otp_email')
+# def test_register_success(mock_send_email, client):
+#     # mock_send_email.return_value = True  # Mock email sending to do nothing
+#     mock_send_email.side_effect = lambda *args, **kwargs: print("Mock email sent!")  # Debugging line
+#     response = client.post('/api/register', json={
+#         'username': 'testuser_' + str(random.randint(1000, 9999)),  # Random suffix for uniqueness
+#         'email': generate_unique_email(),
+#         'phone_number': generate_unique_phone(),
+#         'password': 'Password@123',
+#         'confirm_password': 'Password@123'
+#     })
+
+#     print(response.json)  # Log the full response
+#     assert response.status_code == 201
+#     assert response.json['status'] == 'success'
+#     assert 'User registered successfully' in response.json['message']
+
+from unittest.mock import patch
+import random
+
+@patch('utils.email_utils.send_otp_email')  # Adjust path if needed
 def test_register_success(mock_send_email, client):
-    mock_send_email.return_value = None  # Mock email sending to do nothing
-    mock_send_email.side_effect = lambda *args, **kwargs: print("Mock email sent!")  # Debugging line
-    response = client.post('/api/register', json={
-        'username': 'testuser_' + str(random.randint(1000, 9999)),  # Random suffix for uniqueness
+    # Mocking the send_otp_email to print a message instead of sending an email
+    mock_send_email.side_effect = lambda *args, **kwargs: print("Mock email sent!")
+
+    # Unique user data for testing
+    user_data = {
+        'username': f'testuser_{random.randint(1000, 9999)}',  # Random suffix for uniqueness
         'email': generate_unique_email(),
         'phone_number': generate_unique_phone(),
         'password': 'Password@123',
         'confirm_password': 'Password@123'
-    })
+    }
 
-    print(response.json)  # Log the full response
+    # Act: Make a POST request to the register endpoint
+    response = client.post('/api/register', json=user_data)
+    
+    # Debugging output to log the response content
+    print(response.json)
+
+    # Assert: Verify the response status and content
     assert response.status_code == 201
     assert response.json['status'] == 'success'
     assert 'User registered successfully' in response.json['message']
+
+    # Confirm that the send_otp_email was called exactly once
+    mock_send_email.assert_called_once_with(user_data['email'])
 
 def test_register_password_validation_failure(client):
     response = client.post('/api/register', json={
