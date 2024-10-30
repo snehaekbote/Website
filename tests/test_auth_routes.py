@@ -8,6 +8,11 @@ from routes.auth_routes import User
 import random
 import string
 import time
+import random
+import string
+import time
+from unittest.mock import patch, ANY
+import random
 
 @pytest.fixture
 def client():
@@ -31,10 +36,6 @@ def cleanup_test_users():
             cursor.close()
             connection.close()
 
-import random
-import string
-import time
-from unittest.mock import patch
 
 
 # Helper function to generate unique email
@@ -63,8 +64,7 @@ def generate_unique_phone():
 #     assert response.json['status'] == 'success'
 #     assert 'User registered successfully' in response.json['message']
 
-from unittest.mock import patch
-import random
+
 
 @patch('routes.auth_routes.send_otp_email')  # Adjust path if needed
 def test_register_success(mock_send_email, client):
@@ -92,7 +92,7 @@ def test_register_success(mock_send_email, client):
     assert 'User registered successfully' in response.json['message']
 
     # Confirm that the send_otp_email was called exactly once
-    mock_send_email.assert_called_once_with(user_data['email'])
+    mock_send_email.assert_called_once_with(user_data['email'], otp=ANY)
 
 def test_register_password_validation_failure(client):
     response = client.post('/api/register', json={
